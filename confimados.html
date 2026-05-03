@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Jimi & Daniela</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+    <style>
+        :root {
+            --primary: #b3925d;
+            --success: #10b981;
+            --bg: #f1f5f9;
+            --dark: #334155;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg);
+            color: var(--dark);
+            margin: 0;
+            padding: 15px;
+        }
+
+        .container { max-width: 800px; margin: 0 auto; }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        h1 { font-size: 1.4rem; margin-bottom: 20px; color: var(--primary); }
+
+        /* Tarjetas de Resumen */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            text-align: center;
+        }
+
+        .stat-card small { font-size: 0.75rem; text-transform: uppercase; color: #64748b; letter-spacing: 1px; }
+        .stat-card div { font-size: 1.6rem; font-weight: 600; color: var(--dark); }
+
+        /* Estilo de Tabla / Lista */
+        .list-container {
+            background: white;
+            border-radius: 20px;
+            padding: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05);
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        
+        /* Optimización Móvil: Convertimos la tabla en bloques en pantallas pequeñas */
+        @media (max-width: 600px) {
+            thead { display: none; } /* Ocultar cabecera en móvil */
+            tr { 
+                display: block; 
+                border-bottom: 1px solid #f1f5f9; 
+                padding: 15px 10px; 
+            }
+            td { 
+                display: block; 
+                padding: 2px 0; 
+                text-align: left; 
+            }
+            td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                color: #94a3b8;
+                font-size: 0.75rem;
+                display: block;
+                text-transform: uppercase;
+            }
+        }
+
+        /* Escritorio */
+        @media (min-width: 601px) {
+            th { text-align: left; padding: 15px; color: #64748b; font-size: 0.85rem; border-bottom: 2px solid #f1f5f9; }
+            td { padding: 15px; border-bottom: 1px solid #f1f5f9; }
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .confirmed { background: #dcfce7; color: #166534; }
+        .pending { background: #f1f5f9; color: #64748b; }
+
+        .hidden { display: none !important; }
+        
+        .loader-box { padding: 40px; text-align: center; }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 30px; height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Panel de Invitados</h1>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <small>Enviadas</small>
+                <div id="total-inv">0</div>
+            </div>
+            <div class="stat-card">
+                <small>Confirmados</small>
+                <div id="total-conf" style="color: var(--success);">0</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="list-container">
+        <!-- Loader que SI se oculta -->
+        <div id="loader" class="loader-box">
+            <div class="spinner"></div>
+            <p>Actualizando lista...</p>
+        </div>
+
+        <table id="main-table" class="hidden">
+            <thead>
+                <tr>
+                    <th>Invitado</th>
+                    <th>Pases</th>
+                    <th>Estado</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+            <tbody id="guest-rows">
+                <!-- Datos dinámicos -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    const URL_SB = "https://gedeqtoowqevjvbjrenr.supabase.co";
+    const KEY_SB = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZGVxdG9vd3Fldmp2YmpyZW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NjAzODAsImV4cCI6MjA4NzMzNjM4MH0.fArL01V5XRQWpSxSDj1Ds9YKYcLBAxKLskc7osXcBpQ";
+    
+    const _supabase = supabase.createClient(URL_SB, KEY_SB);
+
+    async function cargarDatos() {
+        const { data, error } = await _supabase
+            .from('invitados_jimi')
+            .select('*')
+            .order('invitados', { ascending: true });
+
+        if (error) {
+            console.error("Error:", error);
+            return;
+        }
+
+        render(data);
+    }
+
+    function render(invitados) {
+        const tbody = document.getElementById('guest-rows');
+        const loader = document.getElementById('loader');
+        const table = document.getElementById('main-table');
+        
+        let confirmados = 0;
+        tbody.innerHTML = '';
+
+        invitados.forEach(item => {
+            if(item.asistira) confirmados++;
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td data-label="Invitado" style="font-weight:600">${item.invitados}</td>
+                <td data-label="Pases">${item.pases}</td>
+                <td data-label="Estado">
+                    <span class="badge ${item.asistira ? 'confirmed' : 'pending'}">
+                        ${item.asistira ? 'Confirmado' : 'Pendiente'}
+                    </span>
+                </td>
+                <td data-label="Fecha">${item.fecha_confirmacion || '---'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // Actualizar contadores
+        document.getElementById('total-inv').textContent = invitados.length;
+        document.getElementById('total-conf').textContent = confirmados;
+
+        // MANEJO VISUAL: Ocultar loader y mostrar tabla
+        loader.classList.add('hidden');
+        table.classList.remove('hidden');
+    }
+
+    // Ejecutar al cargar
+    cargarDatos();
+
+    // Refrescar cada 20 segundos sin mostrar el loader de nuevo (silencioso)
+    setInterval(async () => {
+        const { data } = await _supabase.from('invitados_jimi').select('*').order('invitados', { ascending: true });
+        if(data) render(data);
+    }, 20000);
+</script>
+
+</body>
+</html>
