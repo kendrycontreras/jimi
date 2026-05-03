@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jimi & Daniela | Nuestra Boda</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.js"></script>
+    <style>
+        :root {
+            --gold: #b3925d;
+            --dark: #2c2c2c;
+            --white: #ffffff;
+            --sand: #f9f7f2;
+        }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; }
+        body { margin: 0; font-family: 'Outfit', sans-serif; color: var(--dark); background: var(--white); }
+
+        /* --- SECCIÓN 1: HERO --- */
+        .hero {
+            height: 100vh;
+            background: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), 
+                        url('https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: var(--white);
+            text-align: center;
+            padding: 20px;
+        }
+
+        .hero h1 { font-family: 'Great Vibes', cursive; font-size: 5rem; margin: 0; }
+        .hero p { text-transform: uppercase; letter-spacing: 4px; font-size: 1.1rem; margin-top: 10px; }
+
+        /* --- SECCIÓN 2: HISTORIA --- */
+        .section { padding: 80px 20px; text-align: center; max-width: 800px; margin: auto; }
+        .section-img { 
+            width: 100%; max-width: 500px; height: 350px; 
+            object-fit: cover; border-radius: 100px 100px 0 0; 
+            margin-bottom: 30px; border: 5px solid var(--sand);
+        }
+        h2 { font-family: 'Great Vibes', cursive; font-size: 3.5rem; color: var(--gold); margin-bottom: 10px; }
+        .divider { width: 50px; height: 2px; background: var(--gold); margin: 20px auto; }
+
+        /* --- SECCIÓN 3: DETALLES --- */
+        .bg-details { background: var(--sand); }
+        .grid-details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 40px; }
+        .detail-card { padding: 20px; background: white; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.03); }
+        .detail-card i { font-size: 2rem; display: block; margin-bottom: 10px; }
+
+        /* --- SECCIÓN 4: CONFIRMACIÓN --- */
+        .confirm-box { 
+            background: white; border: 2px solid var(--gold); 
+            padding: 40px 20px; border-radius: 20px; margin-top: 40px;
+        }
+        .btn-confirm {
+            background: var(--gold); color: white; border: none; padding: 15px 40px;
+            font-size: 1rem; font-weight: 600; border-radius: 50px; cursor: pointer;
+            width: 100%; max-width: 300px; transition: 0.3s;
+        }
+        .btn-confirm:hover { transform: scale(1.05); }
+
+        /* --- UTILES --- */
+        .hidden { display: none; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid var(--gold); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .success-msg { color: #059669; font-weight: 600; font-size: 1.2rem; }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .hero h1 { font-size: 3.5rem; }
+            .grid-details { grid-template-columns: 1fr; }
+            .section { padding: 60px 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. HERO -->
+    <section class="hero">
+        <p>Estás invitado a la boda de</p>
+        <h1>Jimi & Daniela</h1>
+        <p>15 . 08 . 2026</p>
+        <a href="#confirmar" style="color: white; margin-top: 50px; text-decoration: none;">↓ Desliza para confirmar</a>
+    </section>
+
+    <!-- 2. NUESTRA HISTORIA -->
+    <section class="section">
+        <img src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?q=80&w=1974&auto=format&fit=crop" alt="Boda" class="section-img">
+        <h2>Nuestra Historia</h2>
+        <div class="divider"></div>
+        <p>Hay momentos que cambian la vida para siempre. Nosotros hemos decidido unir nuestros caminos y nos encantaría que seas testigo de este nuevo comienzo.</p>
+    </section>
+
+    <!-- 3. CUÁNDO Y DÓNDE -->
+    <section class="section bg-details">
+        <h2>Detalles del Evento</h2>
+        <div class="grid-details">
+            <div class="detail-card">
+                <span>📍</span>
+                <h3>Ceremonia</h3>
+                <p>Hacienda de los Sueños<br>Av. Principal #123</p>
+            </div>
+            <div class="detail-card">
+                <span>⏰</span>
+                <h3>Recepción</h3>
+                <p>Salón Cristal<br>18:00 PM</p>
+            </div>
+        </div>
+        <img src="https://images.unsplash.com/photo-1511795409834-ef04bbd61622?q=80&w=2069&auto=format&fit=crop" style="width:100%; border-radius: 20px; margin-top: 30px;" alt="Celebración">
+    </section>
+
+    <!-- 4. CONFIRMACIÓN (SUPABASE) -->
+    <section class="section" id="confirmar">
+        <h2>Confirmación</h2>
+        <p>Por favor, confírmanos tu asistencia antes del 1 de agosto.</p>
+        
+        <div class="confirm-box">
+            <div id="view-loading">
+                <div class="loader"></div>
+                <p>Cargando tu invitación personal...</p>
+            </div>
+
+            <div id="view-invitation" class="hidden">
+                <h3 id="display-name" style="margin-bottom: 5px;"></h3>
+                <p id="display-passes" style="margin-top: 0; color: var(--gold); font-weight: 600;"></p>
+                
+                <div id="action-area">
+                    <button class="btn-confirm" id="btn-confirm">Sí, asistiré</button>
+                </div>
+                <div id="msg-status" class="hidden success-msg"></div>
+            </div>
+
+            <div id="view-error" class="hidden">
+                <p style="color: #dc2626;">No pudimos cargar la invitación. Asegúrate de usar el enlace correcto.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer style="padding: 40px; text-align: center; font-size: 0.8rem; background: var(--sand);">
+        J & D | 2026
+    </footer>
+
+    <script>
+        const URL_SB = "https://gedeqtoowqevjvbjrenr.supabase.co";
+        const KEY_SB = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlZGVxdG9vd3Fldmp2YmpyZW5yIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE3NjAzODAsImV4cCI6MjA4NzMzNjM4MH0.fArL01V5XRQWpSxSDj1Ds9YKYcLBAxKLskc7osXcBpQ";
+        
+        const _supabase = supabase.createClient(URL_SB, KEY_SB);
+
+        const vLoading = document.getElementById('view-loading');
+        const vInvitation = document.getElementById('view-invitation');
+        const vError = document.getElementById('view-error');
+        const btnConfirm = document.getElementById('btn-confirm');
+        const msgStatus = document.getElementById('msg-status');
+
+        const params = new URLSearchParams(window.location.search);
+        const codigo = params.get('c');
+
+        async function cargarInvitacion() {
+            if (!codigo) { mostrarError(); return; }
+
+            const { data, error } = await _supabase
+                .from('invitados_jimi')
+                .select('*')
+                .eq('codigo', parseInt(codigo))
+                .single();
+
+            if (error || !data) {
+                mostrarError();
+            } else {
+                document.getElementById('display-name').textContent = `¡Hola, ${data.invitados}!`;
+                document.getElementById('display-passes').textContent = `Tienes ${data.pases} ${data.pases === 1 ? 'pase disponible' : 'pases disponibles'}`;
+                
+                if (data.asistira) {
+                    yaConfirmado();
+                }
+
+                vLoading.classList.add('hidden');
+                vInvitation.classList.remove('hidden');
+            }
+        }
+
+        function mostrarError() {
+            vLoading.classList.add('hidden');
+            vError.classList.remove('hidden');
+        }
+
+        function yaConfirmado() {
+            btnConfirm.classList.add('hidden');
+            msgStatus.innerHTML = "¡Confirmación recibida! <br>✨ Te esperamos ✨";
+            msgStatus.classList.remove('hidden');
+        }
+
+        btnConfirm.addEventListener('click', async () => {
+            btnConfirm.disabled = true;
+            btnConfirm.textContent = "Confirmando...";
+
+            const { error } = await _supabase
+                .from('invitados_jimi')
+                .update({ 
+                    asistira: true, 
+                    fecha_confirmacion: new Date().toLocaleString() 
+                })
+                .eq('codigo', parseInt(codigo));
+
+            if (error) {
+                alert("Hubo un error al confirmar. Por favor intenta de nuevo.");
+                btnConfirm.disabled = false;
+                btnConfirm.textContent = "Sí, asistiré";
+            } else {
+                yaConfirmado();
+            }
+        });
+
+        cargarInvitacion();
+    </script>
+</body>
+</html>
